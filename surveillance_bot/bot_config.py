@@ -40,9 +40,14 @@ class BotConfig:
     SRV_VIDEO_DURATION = 'srv_video_duration'
     SRV_PICTURE_INTERVAL = 'srv_picture_interval'
     SRV_MOTION_CONTOURS = 'srv_motion_contours'
+    # oja: values for plug
+    PLUG_READ_INTERVAL = 'plug_read_interval'
+    PLUG_FAIL_TIME = 'plug_fail_time'
+    PLUG_MAC = 'plug_mac'
 
     # State definitions for top level conversation
-    MAIN_MENU, GENERAL_CONFIG, SURVEILLANCE_CONFIG = map(chr, range(3))
+    # oja: add new menu for plug 
+    MAIN_MENU, GENERAL_CONFIG, SURVEILLANCE_CONFIG, PLUG_CONFIG = map(chr, range(4))
 
     # State definitions for second level conversation
     (
@@ -51,16 +56,23 @@ class BotConfig:
         CHANGE_SRV_VIDEO_DURATION,
         CHANGE_SRV_PICTURE_INTERVAL,
         CHANGE_SRV_MOTION_CONTOURS
-    ) = map(chr, range(3, 8))
+    ) = map(chr, range(4, 9))
+
+    # oja: plug config
+    (
+        CHANGE_READ_INTERVAL,
+        CHANGE_FAIL_TIME,
+        CHANGE_MAC
+    ) = map(chr, range(9, 11))
 
     # State definitions for input conversation
-    BOOLEAN_INPUT, INTEGER_INPUT = map(chr, range(8, 10))
+    BOOLEAN_INPUT, INTEGER_INPUT, STR_INPUT = map(chr, range(11, 13))
 
     # Shortcut for ConversationHandler.END
     END = ConversationHandler.END
 
     # Auxiliary constants
-    CURRENT_VARIABLE, RETURN_HANDLER, ENABLE, DISABLE = map(chr, range(10, 14))
+    CURRENT_VARIABLE, RETURN_HANDLER, ENABLE, DISABLE = map(chr, range(12, 16))
 
     @staticmethod
     def get_config_handler(bot: 'Bot') -> ConversationHandler:
@@ -132,6 +144,31 @@ class BotConfig:
                         pattern='^' + str(BotConfig.END) + '$'
                     )
                 ],
+                # oja:
+                BotConfig.PLUG_CONFIG: [
+                    CallbackQueryHandler(
+                        BotConfig._change_read_interval,
+                        pattern='^'
+                        + str(BotConfig.CHANGE_READ_INTERVAL)
+                        + '$'
+                    ),
+                    CallbackQueryHandler(
+                        BotConfig._change_fail_time,
+                        pattern='^'
+                        + str(BotConfig.CHANGE_FAIL_TIME)
+                        + '$'
+                    ),
+                    CallbackQueryHandler(
+                        BotConfig._change_mac,
+                        pattern='^'
+                        + str(BotConfig.CHANGE_MAC)
+                        + '$'
+                    ),
+                    CallbackQueryHandler(
+                        BotConfig._main_menu,
+                        pattern='^' + str(BotConfig.END) + '$'
+                    )
+                ],
                 BotConfig.BOOLEAN_INPUT: [
                     CallbackQueryHandler(
                         BotConfig._boolean_input,
@@ -177,6 +214,13 @@ class BotConfig:
         if BotConfig.SRV_MOTION_CONTOURS not in context.bot_data:
             context.bot_data[BotConfig.SRV_MOTION_CONTOURS] = True
 
+        # oja:
+        if BotConfig.PLUG_READ_INTERVAL not in context.bot_data:
+            context.bot_data[BotConfig.PLUG_READ_INTERVAL] = 10
+        if BotConfig.PLUG_FAIL_TIME not in context.bot_data:
+            context.bot_data[BotConfig.PLUG_FAIL_TIME] = 30
+
+
     # Menus
 
     @staticmethod
@@ -212,6 +256,13 @@ class BotConfig:
                 text='Surveillance mode configuration',
                 callback_data=str(BotConfig.SURVEILLANCE_CONFIG)
             )],
+
+            # oja:
+            [InlineKeyboardButton(
+                text='Plug configuration',
+                callback_data=str(BotConfig.PLUG_CONFIG)
+            )],
+
             [InlineKeyboardButton(
                 text='Done',
                 callback_data=str(BotConfig.END)
@@ -318,6 +369,63 @@ class BotConfig:
             [InlineKeyboardButton(
                 text='Draw motion contours',
                 callback_data=str(BotConfig.CHANGE_SRV_MOTION_CONTOURS)
+            )],
+            [InlineKeyboardButton(
+                text='Back',
+                callback_data=str(BotConfig.END)
+            )]
+        ]
+
+        BotConfig._render_menu(update, text, buttons)
+
+        return BotConfig.SURVEILLANCE_CONFIG
+
+    # oja:
+    @staticmethod
+    def _plug_config(update: Update, context: CallbackContext) -> str:
+        """
+        Creates the menu for the plug configuration and send it
+        to the user.
+
+        Args:
+            update: The update to be handled.
+            context: The context object for the update.
+
+        Returns:
+            The state PLUG_CONFIG.
+        """
+        plug_read_interval = context.bot_data[BotConfig.PLUG_READ_INTERVAL]
+        plug_fail_time = context.bot_data[BotConfig.PLUG_FAIL_TIME]
+        plug_mac = context.bot_data[BotConfig.PLUG_MAC]
+
+        plug_mac_str = 'None' if not plug_mac else str(plug_mac)
+
+        text = f"*Plug configuration*\n" \
+               f"\n" \
+               f"__Read interval__:\n" \
+               f" |- _Description_: Interval between state checks " \
+               f" |- _Current value_: *{plug_read_interval} seconds*\n" \
+               f"\n" \
+               f"__Fail time__:\n" \
+               f" |- _Description_: Interval before error message " \
+               f" |- _Current value_: *{plug_fail_time} seconds*\n" \
+               f"\n" \
+               f"__Plug address__:\n" \
+               f" |- _Description_: Mac address for plug " \
+               f" |- _Current value_: *{plug_mac_str}*" \
+               f"".replace('|', '\\')
+        buttons = [
+            [InlineKeyboardButton(
+                text='Read Interval',
+                callback_data=str(BotConfig.CHANGE_READ_INTERVAL)
+            )],
+            [InlineKeyboardButton(
+                text='Fail time',
+                callback_data=str(BotConfig.CHANGE_FAIL_TIME)
+            )],
+            [InlineKeyboardButton(
+                text='MAC address',
+                callback_data=str(BotConfig.CHANGE_MAC)
             )],
             [InlineKeyboardButton(
                 text='Back',
@@ -527,6 +635,106 @@ class BotConfig:
             BotConfig.SRV_MOTION_CONTOURS,
             BotConfig._surveillance_config
         )
+    
+    # oja:
+
+    @staticmethod
+    def _change_read_interval(
+            update: Update,
+            context: CallbackContext
+    ) -> str:
+        """
+        Prepares all required data to request the PLUG_READ_INTERVAL
+        configuration to the user.
+
+        Args:
+            update: The update to be handled.
+            context: The context object for the update.
+
+        Returns:
+            The state INTEGER_INPUT through `_integer_question` method.
+        """
+        read_interval = context.bot_data[BotConfig.PLUG_READ_INTERVAL]
+
+        text = f'*Read interval*\n' \
+               f'\n' \
+               f'Current value: *{read_interval}*\n' \
+               f'\n' \
+               f'Type value for read interval:'
+
+        return BotConfig._integer_question(
+            update,
+            context,
+            text,
+            BotConfig.PLUG_READ_INTERVAL,
+            BotConfig._plug_config
+        )
+    
+    
+    @staticmethod
+    def _change_fail_time(
+            update: Update,
+            context: CallbackContext
+    ) -> str:
+        """
+        Prepares all required data to request the PLUG_FAIL_TIME
+        configuration to the user.
+
+        Args:
+            update: The update to be handled.
+            context: The context object for the update.
+
+        Returns:
+            The state INTEGER_INPUT through `_integer_question` method.
+        """
+        fail_time = context.bot_data[BotConfig.PLUG_FAIL_TIME]
+
+        text = f'*Fail time*\n' \
+               f'\n' \
+               f'Current value: *{fail_time}*\n' \
+               f'\n' \
+               f'Type value for fail time:'
+
+        return BotConfig._integer_question(
+            update,
+            context,
+            text,
+            BotConfig.PLUG_FAIL_TIME,
+            BotConfig._plug_config
+        )
+    
+    @staticmethod
+    def _change_MAC(
+            update: Update,
+            context: CallbackContext
+    ) -> str:
+        """
+        Prepares all required data to request the PLUG_MAC
+        configuration to the user.
+
+        Args:
+            update: The update to be handled.
+            context: The context object for the update.
+
+        Returns:
+            The string through `_str_question` method.
+        """
+        mac = context.bot_data[BotConfig.PLUG_MAC]
+
+        text = f'*MAC for plug*\n' \
+               f'\n' \
+               f'Current value: *{mac}*\n' \
+               f'\n' \
+               f'Type string for MAC:'
+
+        return BotConfig._str_question(
+            update,
+            context,
+            text,
+            BotConfig.MAC,
+            BotConfig._plug_config
+        )
+    
 
     # Questions helpers.
 
@@ -606,6 +814,39 @@ class BotConfig:
         )
 
         return BotConfig.INTEGER_INPUT
+    
+    # oja:
+    @staticmethod
+    def _str_question(
+            update: Update,
+            context: CallbackContext,
+            text: str,
+            current_variable: str,
+            return_handler: Callable[[Update, CallbackContext], str]
+    ) -> str:
+        """
+        Builds a str question to send it to the user using received data.
+
+        Args:
+            update: The update to be handled.
+            context: The context object for the update.
+            text: Message to be shown to the users.
+            current_variable: Variable to be set.
+            return_handler: Handler to be called with the user response.
+
+        Returns:
+            The state STR_INPUT.
+        """
+        context.user_data[BotConfig.CURRENT_VARIABLE] = current_variable
+        context.user_data[BotConfig.RETURN_HANDLER] = return_handler
+
+        update.callback_query.answer()
+        update.callback_query.edit_message_text(
+            text=text,
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
+
+        return BotConfig.STR_INPUT
 
     # Input handlers.
 
@@ -651,6 +892,36 @@ class BotConfig:
                 text='Invalid value, insert an integer number between 1 and 99'
             )
             return BotConfig.INTEGER_INPUT
+
+        context.bot_data[
+            context.user_data[BotConfig.CURRENT_VARIABLE]
+        ] = value
+
+        return context.user_data[BotConfig.RETURN_HANDLER](update, context)
+    
+    # oja:
+    @staticmethod
+    def _str_input(update: Update, context: CallbackContext) -> str:
+        """
+        Receive a str input from the user, validates it, and saves the
+        value into corresponding variable.
+
+        Args:
+            update: The update to be handled.
+            context: The context object for the update.
+
+        Returns:
+            The execution of the previously stored handler or the state
+                STR_INPUT in case of validation error.
+        """
+        try:
+            value = str(update.message.text)
+            # maybe add more checks
+        except ValueError:
+            update.message.reply_text(
+                text='Invalid value'
+            )
+            return BotConfig.STR_INPUT
 
         context.bot_data[
             context.user_data[BotConfig.CURRENT_VARIABLE]
