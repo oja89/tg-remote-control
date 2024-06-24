@@ -98,7 +98,7 @@ class BotConfig:
                         pattern='^' + str(BotConfig.SURVEILLANCE_CONFIG) + '$'
                     ),
                     CallbackQueryHandler(
-                        BotConfig._surveillance_config,
+                        BotConfig._plug_config,
                         pattern='^' + str(BotConfig.PLUG_CONFIG) + '$'
                     ),
                     CallbackQueryHandler(
@@ -188,6 +188,12 @@ class BotConfig:
                         Filters.text,
                         BotConfig._integer_input
                     )
+                ],
+                BotConfig.STR_INPUT: [
+                    MessageHandler(
+                        Filters.text,
+                        BotConfig._str_input
+                    )
                 ]
             },
             fallbacks=[bot.command_handler('stop_config', BotConfig._end)],
@@ -223,6 +229,9 @@ class BotConfig:
             context.bot_data[BotConfig.PLUG_READ_INTERVAL] = 10
         if BotConfig.PLUG_FAIL_TIME not in context.bot_data:
             context.bot_data[BotConfig.PLUG_FAIL_TIME] = 30
+        if BotConfig.PLUG_MAC not in context.bot_data:
+            context.bot_data[BotConfig.PLUG_MAC] = "Not defined"
+            
 
 
     # Menus
@@ -402,8 +411,6 @@ class BotConfig:
         plug_fail_time = context.bot_data[BotConfig.PLUG_FAIL_TIME]
         plug_mac = context.bot_data[BotConfig.PLUG_MAC]
 
-        plug_mac_str = 'None' if not plug_mac else str(plug_mac)
-
         text = f"*Plug configuration*\n" \
                f"\n" \
                f"__Read interval__:\n" \
@@ -416,7 +423,7 @@ class BotConfig:
                f"\n" \
                f"__Plug address__:\n" \
                f" |- _Description_: Mac address for plug " \
-               f" |- _Current value_: *{plug_mac_str}*" \
+               f" |- _Current value_: *{plug_mac}*" \
                f"".replace('|', '\\')
         buttons = [
             [InlineKeyboardButton(
@@ -735,7 +742,7 @@ class BotConfig:
             update,
             context,
             text,
-            BotConfig.MAC,
+            BotConfig.PLUG_MAC,
             BotConfig._plug_config
         )
     
@@ -918,14 +925,7 @@ class BotConfig:
             The execution of the previously stored handler or the state
                 STR_INPUT in case of validation error.
         """
-        try:
-            value = str(update.message.text)
-            # maybe add more checks
-        except ValueError:
-            update.message.reply_text(
-                text='Invalid value'
-            )
-            return BotConfig.STR_INPUT
+        value = update.message.text
 
         context.bot_data[
             context.user_data[BotConfig.CURRENT_VARIABLE]
