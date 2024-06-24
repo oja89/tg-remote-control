@@ -26,6 +26,8 @@ from surveillance_bot.camera import (
     CameraConnectionError,
     CodecNotAvailable
 )
+# oja:
+from plug import HueClient, HueScanner
 
 HandlerType = Callable[[Update, CallbackContext], Any]
 
@@ -106,6 +108,9 @@ class Bot:
 
         # Register error handler
         dispatcher.add_error_handler(self._error)
+
+        # oja: TODO:
+        # add self.plug...
 
     def command_handler(
             self,
@@ -219,7 +224,9 @@ class Bot:
         custom_keyboard = [
             [
                 '/get_photo',
-                '/get_video'
+                '/get_video',
+                # oja:
+                '/get_power'
             ],
             [
                 f"/surveillance_{'stop' if active else 'start'}"
@@ -262,6 +269,14 @@ class Bot:
                  "/surveillance|_status |- Indicates if surveillance mode "
                  "is active or not\n"
                  "\n"
+
+                 # oja:
+                "*Power plug commands*\n"
+                 "/power|_on |- Starts power\n"
+                 "/power|_off |- Stops power\n"
+                 "/power|_status |- Checks status of plug\n"
+                 "\n"
+
                  "*General commands*\n"
                  "/config |- Invokes configuration menu\n"
                  "/stop|_config |- Abort configuration sequence\n"
@@ -486,3 +501,23 @@ class Bot:
             update.message.reply_text(text="Surveillance mode is active")
         else:
             update.message.reply_text(text="Surveillance mode is not active")
+
+
+    # oja:
+    def _command_get_power(
+        self,
+        update: Update,
+        _: CallbackContext
+    ) -> None:
+        """
+        Get status of power plug
+        """
+        # quick check to get things on track
+        plug = HueClient("mac here")
+
+        powered = plug.get_power()
+
+        if powered:
+            update.message.reply_text(text="Power is ON")
+        elif not powered:
+            update.message.reply_text(text="Power is OFF")
