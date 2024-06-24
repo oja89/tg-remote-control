@@ -21,7 +21,7 @@ from telegram.ext import (
 )
 
 if TYPE_CHECKING:  # pragma: no cover
-    from surveillance_bot.bot import Bot  # pylint: disable=cyclic-import
+    from bot import Bot  # pylint: disable=cyclic-import
 
 
 class BotConfig:
@@ -63,16 +63,16 @@ class BotConfig:
         CHANGE_READ_INTERVAL,
         CHANGE_FAIL_TIME,
         CHANGE_MAC
-    ) = map(chr, range(9, 11))
+    ) = map(chr, range(9, 12))
 
     # State definitions for input conversation
-    BOOLEAN_INPUT, INTEGER_INPUT, STR_INPUT = map(chr, range(11, 13))
+    BOOLEAN_INPUT, INTEGER_INPUT, STR_INPUT = map(chr, range(12, 15))
 
     # Shortcut for ConversationHandler.END
     END = ConversationHandler.END
 
     # Auxiliary constants
-    CURRENT_VARIABLE, RETURN_HANDLER, ENABLE, DISABLE = map(chr, range(12, 16))
+    CURRENT_VARIABLE, RETURN_HANDLER, ENABLE, DISABLE = map(chr, range(15, 19))
 
     @staticmethod
     def get_config_handler(bot: 'Bot') -> ConversationHandler:
@@ -704,7 +704,7 @@ class BotConfig:
         )
     
     @staticmethod
-    def _change_MAC(
+    def _change_mac(
             update: Update,
             context: CallbackContext
     ) -> str:

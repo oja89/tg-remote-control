@@ -48,7 +48,11 @@ async def main(address = None):
         hue_devices = await HueScanner.discover()
         hue_devices = sorted(hue_devices, key=lambda d: d.rssi, reverse=True)
         
+        # this finds more than just the hue devices, but tests only the first
+        print(hue_devices)
+        
         device = hue_devices[0]
+
         address = device.address
         print(f"BLE Device: {device.name}")
         print(f"BLE rssi: {device.rssi}")

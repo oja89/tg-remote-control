@@ -20,13 +20,14 @@ from telegram.ext import (
     Updater
 )  # type: ignore
 
-from surveillance_bot.bot_config import BotConfig
-from surveillance_bot.camera import (
+from bot_config import BotConfig
+from camera import (
     Camera,
     CameraConnectionError,
     CodecNotAvailable
 )
 # oja:
+import asyncio
 from plug import HueClient, HueScanner
 
 HandlerType = Callable[[Update, CallbackContext], Any]
@@ -504,7 +505,7 @@ class Bot:
 
 
     # oja:
-    def _command_get_power(
+    def _async_command_get_power(
         self,
         update: Update,
         _: CallbackContext
@@ -513,11 +514,18 @@ class Bot:
         Get status of power plug
         """
         # quick check to get things on track
-        plug = HueClient("mac here")
+        async def check_power():
+            async with HueClient("mac address") as plug:
 
-        powered = plug.get_power()
+                powered = plug.get_power()
+                return await powered
+        
+        powered = asyncio.run(check_power())
+        update.message.reply_text(text=str(powered))
 
         if powered:
             update.message.reply_text(text="Power is ON")
         elif not powered:
             update.message.reply_text(text="Power is OFF")
+            
+            
