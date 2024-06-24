@@ -98,6 +98,10 @@ class BotConfig:
                         pattern='^' + str(BotConfig.SURVEILLANCE_CONFIG) + '$'
                     ),
                     CallbackQueryHandler(
+                        BotConfig._surveillance_config,
+                        pattern='^' + str(BotConfig.PLUG_CONFIG) + '$'
+                    ),
+                    CallbackQueryHandler(
                         BotConfig._end,
                         pattern='^' + str(BotConfig.END) + '$'
                     )
