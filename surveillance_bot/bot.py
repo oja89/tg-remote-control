@@ -562,10 +562,10 @@ class Bot:
         context: CallbackContext
     ) -> None:
         """
-        Switch plug on
+        Switch plug off
         """
         # quick check to get things on track
-        async def power_on():
+        async def power_off():
             async with HueClient(address) as plug:
 
                 switched = plug.set_power(False)
@@ -573,7 +573,7 @@ class Bot:
         
         address = context.bot_data[BotConfig.PLUG_MAC]
 
-        switched = asyncio.run(power_on())
+        switched = asyncio.run(power_off())
         update.message.reply_text(text=str(switched))
 
         if switched:
