@@ -543,18 +543,13 @@ class Bot:
         async def power_on():
             async with HueClient(address) as plug:
 
-                switched = plug.set_power(True)
-                return await switched
+                resp = await plug.set_power(True)
+                return resp
         
         address = context.bot_data[BotConfig.PLUG_MAC]
 
-        switched = asyncio.run(power_on())
-        update.message.reply_text(text=str(switched))
-
-        if switched:
-            update.message.reply_text(text="Power switched to ON")
-        else:
-            update.message.reply_text(text="No response")
+        resp = asyncio.run(power_on())
+        update.message.reply_text(text=str(resp))
 
     def _async_command_power_off(
         self,
@@ -568,17 +563,12 @@ class Bot:
         async def power_off():
             async with HueClient(address) as plug:
 
-                switched = plug.set_power(False)
-                return await switched
+                resp = await plug.set_power(False)
+                return resp
         
         address = context.bot_data[BotConfig.PLUG_MAC]
 
-        switched = asyncio.run(power_off())
-        update.message.reply_text(text=str(switched))
-
-        if switched:
-            update.message.reply_text(text="Power switched to OFF")
-        else:
-            update.message.reply_text(text="No response")
+        resp = asyncio.run(power_off())
+        update.message.reply_text(text=str(resp))
             
             

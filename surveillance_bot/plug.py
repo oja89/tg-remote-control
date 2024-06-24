@@ -38,7 +38,13 @@ class HueClient(BleakClient):
         Sets power state (True == on, False == off)
         """
         data = b'\x01' if enabled else b'\x00'
-        return await self.write_gatt_char(HueClient._command(2), data, response=True)
+        #return await self.write_gatt_char(HueClient._command(2), data, response=True)
+        # check status before and after
+        before = await self.get_power()
+        await self.write_gatt_char(HueClient._command(2), data, response=True)
+        after = await self.get_power()
+        return (str(before) + str(after))
+        
 
 async def main(address = None):
     if address is None:

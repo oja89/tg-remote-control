@@ -230,7 +230,7 @@ class BotConfig:
         if BotConfig.PLUG_FAIL_TIME not in context.bot_data:
             context.bot_data[BotConfig.PLUG_FAIL_TIME] = 30
         if BotConfig.PLUG_MAC not in context.bot_data:
-            context.bot_data[BotConfig.PLUG_MAC] = "Not defined"
+            context.bot_data[BotConfig.PLUG_MAC] = ""
             
 
 
