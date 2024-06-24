@@ -227,7 +227,9 @@ class Bot:
                 '/get_photo',
                 '/get_video',
                 # oja:
-                '/get_power'
+                '/get_power',
+                '/power_on',
+                '/power_off'
             ],
             [
                 f"/surveillance_{'stop' if active else 'start'}"
@@ -275,7 +277,7 @@ class Bot:
                 "*Power plug commands*\n"
                  "/power|_on |- Starts power\n"
                  "/power|_off |- Stops power\n"
-                 "/power|_status |- Checks status of plug\n"
+                 "/get|_power |- Checks status of plug\n"
                  "\n"
 
                  "*General commands*\n"
@@ -508,18 +510,19 @@ class Bot:
     def _async_command_get_power(
         self,
         update: Update,
-        _: CallbackContext
+        context: CallbackContext
     ) -> None:
         """
         Get status of power plug
         """
-        # quick check to get things on track
         async def check_power():
-            async with HueClient("mac address") as plug:
+            async with HueClient(address) as plug:
 
                 powered = plug.get_power()
                 return await powered
         
+        address = context.bot_data[BotConfig.PLUG_MAC]
+
         powered = asyncio.run(check_power())
         update.message.reply_text(text=str(powered))
 
@@ -527,5 +530,55 @@ class Bot:
             update.message.reply_text(text="Power is ON")
         elif not powered:
             update.message.reply_text(text="Power is OFF")
+            
+    def _async_command_power_on(
+        self,
+        update: Update,
+        context: CallbackContext
+    ) -> None:
+        """
+        Switch plug on
+        """
+        # quick check to get things on track
+        async def power_on():
+            async with HueClient(address) as plug:
+
+                switched = plug.set_power(True)
+                return await switched
+        
+        address = context.bot_data[BotConfig.PLUG_MAC]
+
+        switched = asyncio.run(power_on())
+        update.message.reply_text(text=str(switched))
+
+        if switched:
+            update.message.reply_text(text="Power switched to ON")
+        else:
+            update.message.reply_text(text="No response")
+
+    def _async_command_power_off(
+        self,
+        update: Update,
+        context: CallbackContext
+    ) -> None:
+        """
+        Switch plug on
+        """
+        # quick check to get things on track
+        async def power_on():
+            async with HueClient(address) as plug:
+
+                switched = plug.set_power(False)
+                return await switched
+        
+        address = context.bot_data[BotConfig.PLUG_MAC]
+
+        switched = asyncio.run(power_on())
+        update.message.reply_text(text=str(switched))
+
+        if switched:
+            update.message.reply_text(text="Power switched to OFF")
+        else:
+            update.message.reply_text(text="No response")
             
             

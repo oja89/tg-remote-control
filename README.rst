@@ -45,7 +45,8 @@ Quick-start (camera only)
 
 1. Install package with ``pip``::
 
-    pip install surveillance-bot
+    DONT
+    (if you use pip install surveillance_bot you will not get these modifications)
 
 2. Set application configuration variables (see `Advanced configuration`_)::
 
@@ -54,7 +55,7 @@ Quick-start (camera only)
 
 3. Run script::
 
-    surveillance_bot
+    py main.py
 
 Add power control
 *****************

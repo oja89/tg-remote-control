@@ -435,7 +435,7 @@ class BotConfig:
 
         BotConfig._render_menu(update, text, buttons)
 
-        return BotConfig.SURVEILLANCE_CONFIG
+        return BotConfig.PLUG_CONFIG
 
     @staticmethod
     def _render_menu(
